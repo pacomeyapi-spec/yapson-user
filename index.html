@@ -347,7 +347,7 @@ tr.clickable:hover td{background:rgba(255,255,255,.02);cursor:pointer}
 <div id="toast-container"></div>
 
 <script>
-const API = window.API_URL || (()=>{const h=window.location.hostname;if(h==='localhost')return'http://localhost:3000';return window.location.origin.replace(/-user\b/,'-backend');})();
+const API = window.API_URL || (()=>{const h=window.location.hostname;if(h==='localhost')return'http://localhost:3000';return 'https://yapson-mobile-backend-production.up.railway.app';})();
 let TOKEN=localStorage.getItem('yapson_user_token');
 let selectedType=null, selectedOperator=null, operators=[];
 let histPage=1, trackingInterval=null, ws=null;
