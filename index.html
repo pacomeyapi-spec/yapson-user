@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Yapson — Espace Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0f1117;--bg2:#161b24;--bg3:#1e2533;--border:#252f3e;--border2:#2d3848;--text:#dce3ef;--text2:#7e8fa8;--text3:#4a5668;--accent:#4f9eff;--accent2:#3b8af0;--green:#22c55e;--red:#ef4444;--orange:#f97316;--yellow:#f59e0b;--r:10px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh}
+button{cursor:pointer;font-family:var(--sans)}input,select,textarea{font-family:var(--sans);font-size:14px}
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
+#login-screen.hidden{display:none}
+.login-box{width:380px;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-mark{width:52px;height:52px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:22px;color:#fff;margin:0 auto 12px}
+.login-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--text3)}
+.login-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-logo{display:flex;align-items:center;gap:10px}
+.topbar-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:12px;color:#fff}
+.topbar-title{font-family:var(--mono);font-size:13px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-user{font-size:12px;color:var(--text2)}
+.topbar-av{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.nav-tabs{display:flex;gap:2px;padding:0 24px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.nav-tab{padding:12px 16px;font-size:13px;color:var(--text2);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .15s;font-weight:500}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.page{display:none}.page.active{display:block}
+.page-hd{margin-bottom:22px}
+.page-title{font-size:18px;font-weight:600}
+.page-sub{font-size:12px;color:var(--text2);margin-top:3px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.stat-label{font-size:11px;color:var(--text3);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:600}
+.stat-sub{font-size:11px;color:var(--text2);margin-top:4px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.card-hd{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:18px}
+.op-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:10px 13px;border-radius:8px;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+.form-hint{font-size:11px;color:var(--text3);margin-top:5px}
+.op-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.op-type-card{border:2px solid var(--border2);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;background:var(--bg3)}
+.op-type-card:hover{border-color:var(--border2)}
+.op-type-card.selected-depot{border-color:var(--green);background:rgba(34,197,94,.06)}
+.op-type-card.selected-retrait{border-color:var(--red);background:rgba(239,68,68,.06)}
+.op-type-icon{font-size:24px;margin-bottom:8px}
+.op-type-name{font-size:14px;font-weight:600;margin-bottom:3px}
+.op-type-sub{font-size:12px;color:var(--text2)}
+.op-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.operator-btn{border:1px solid var(--border2);border-radius:8px;padding:12px;cursor:pointer;background:var(--bg3);transition:all .15s;display:flex;align-items:center;gap:10px}
+.operator-btn:hover{border-color:var(--accent)}
+.operator-btn.selected{border-color:var(--accent);background:rgba(79,158,255,.08)}
+.op-dot{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;font-family:var(--mono)}
+.od-orange{background:rgba(249,115,22,.2);color:#f97316}
+.od-mtn{background:rgba(245,158,11,.2);color:#f59e0b}
+.od-moov{background:rgba(79,158,255,.2);color:var(--accent)}
+.od-wave{background:rgba(34,197,94,.2);color:var(--green)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:500;border:none;transition:all .15s;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-lg{padding:13px 24px;font-size:15px;border-radius:10px;width:100%;justify-content:center}
+.btn-sm{padding:5px 11px;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-family:var(--mono);font-weight:500}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.b-success{background:rgba(34,197,94,.12);color:#4ade80}
+.b-failed{background:rgba(239,68,68,.12);color:#f87171}
+.b-pending{background:rgba(245,158,11,.12);color:#fbbf24}
+.b-processing{background:rgba(79,158,255,.12);color:#60a5fa}
+.b-timeout{background:rgba(139,92,246,.12);color:#a78bfa}
+.b-depot{background:rgba(34,197,94,.1);color:#4ade80}
+.b-retrait{background:rgba(239,68,68,.1);color:#f87171}
+.b-orange{background:rgba(249,115,22,.12);color:#fb923c}
+.b-mtn{background:rgba(245,158,11,.12);color:#fbbf24}
+.b-moov{background:rgba(79,158,255,.12);color:#60a5fa}
+.b-wave{background:rgba(34,197,94,.12);color:#4ade80}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:9px 14px;font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg3);font-weight:500}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px}
+tr:last-child td{border-bottom:none}
+tr.clickable:hover td{background:rgba(255,255,255,.02);cursor:pointer}
+.mono{font-family:var(--mono);font-size:12px}
+.pagination{display:flex;align-items:center;gap:8px;padding:12px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
+.pagination button{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:6px;cursor:pointer}
+.pagination button:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
+.pagination button:disabled{opacity:.35;cursor:not-allowed}
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-select{background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:8px;font-size:12px;outline:none}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:15px;font-weight:600}
+.modal-x{background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1;padding:2px}
+.modal-x:hover{color:var(--red)}
+.modal-body{padding:20px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}
+.confirm-amount{text-align:center;padding:20px 0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.confirm-amount-val{font-family:var(--mono);font-size:32px;font-weight:700;margin-bottom:6px}
+.confirm-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.confirm-row:last-child{border-bottom:none}
+.confirm-label{color:var(--text2)}
+.success-screen{text-align:center;padding:24px}
+.success-icon{width:64px;height:64px;border-radius:50%;background:rgba(34,197,94,.15);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+.success-title{font-size:18px;font-weight:600;margin-bottom:8px}
+.success-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.success-ref{font-family:var(--mono);font-size:12px;background:var(--bg3);padding:8px 14px;border-radius:8px;color:var(--text2)}
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-title{font-size:14px;color:var(--text2);margin-bottom:6px}
+.op-status-detail{display:flex;flex-direction:column;align-items:center;padding:20px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px}
+#toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;min-width:260px;animation:si .2s ease}
+.toast.t-ok{border-left:3px solid var(--green)}.toast.t-err{border-left:3px solid var(--red)}.toast.t-info{border-left:3px solid var(--accent)}
+@keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;margin-right:5px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+.op-step{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.op-step:last-child{border-bottom:none}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step-done .step-num{background:var(--green)}
+.step-text{font-size:13px;color:var(--text2)}
+.step-done .step-text{color:var(--text)}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-mark">Y</div>
+      <div class="login-title">Yapson Agent</div>
+      <div class="login-sub">Plateforme Mobile Money</div>
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <div class="form-group"><label class="form-label">Identifiant</label><input class="form-input" id="login-user" placeholder="Votre nom d'utilisateur" autocomplete="username"/></div>
+    <div class="form-group"><label class="form-label">Mot de passe</label><input class="form-input" id="login-pass" type="password" autocomplete="current-password"/></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="doLogin()">Se connecter</button>
+  </div>
+</div>
+
+<div id="app-screen" style="display:none">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-mark">Y</div>
+      <span class="topbar-title">Yapson Agent</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbar-user"></span>
+      <div class="topbar-av" id="topbar-av">A</div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('dashboard')" data-tab="dashboard">Accueil</button>
+    <button class="nav-tab" onclick="showTab('nouvelle-op')" data-tab="nouvelle-op">Nouvelle opération</button>
+    <button class="nav-tab" onclick="showTab('historique')" data-tab="historique">Historique</button>
+  </div>
+  <div class="container">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="tab-dashboard">
+      <div class="page-hd">
+        <div class="page-title" id="dash-greeting">Bonjour</div>
+        <div class="page-sub"><span class="live-dot"></span>Mises à jour en temps réel</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Mes opérations</div><div class="stat-val" id="my-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">Succès</div><div class="stat-val" id="my-success" style="color:var(--green)">—</div></div>
+        <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-val" id="my-pending" style="color:var(--yellow)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Volume aujourd'hui</div><div class="stat-val" id="my-today" style="font-size:16px">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Mes dernières opérations <button class="btn btn-ghost btn-sm" onclick="loadMyStats();loadHistory()">↻</button></div>
+        <table>
+          <thead><tr><th>Type</th><th>Opérateur</th><th>Montant</th><th>Téléphone</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+          <tbody id="dash-ops"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:14px">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;padding:14px" onclick="showTab('nouvelle-op')">+ Nouvelle opération</button>
+        <button class="btn btn-ghost" style="flex:1;justify-content:center;padding:14px" onclick="showTab('historique')">Voir tout l'historique</button>
+      </div>
+    </div>
+
+    <!-- NOUVELLE OPERATION -->
+    <div class="page" id="tab-nouvelle-op">
+      <div class="page-hd">
+        <div class="page-title">Nouvelle opération</div>
+        <div class="page-sub">Créer un dépôt ou un retrait Mobile Money</div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">Étape 1 — Type d'opération</div>
+        <div class="card-body">
+          <div class="op-type-grid">
+            <div class="op-type-card" id="btn-depot" onclick="selectType('DEPOT')">
+              <div class="op-type-icon">⬇️</div>
+              <div class="op-type-name">Dépôt</div>
+              <div class="op-type-sub">Envoyer de l'argent sur un compte</div>
+            </div>
+            <div class="op-type-card" id="btn-retrait" onclick="selectType('RETRAIT')">
+              <div class="op-type-icon">⬆️</div>
+              <div class="op-type-name">Retrait</div>
+              <div class="op-type-sub">Retirer de l'argent d'un compte</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="step2" style="display:none">
+        <div class="card-hd">Étape 2 — Opérateur</div>
+        <div class="card-body">
+          <div class="op-grid" id="op-btns"></div>
+        </div>
+      </div>
+
+      <div class="card" id="step3" style="display:none">
+        <div class="card-hd">Étape 3 — Détails</div>
+        <div class="card-body">
+          <div class="op-form-grid">
+            <div class="form-group">
+              <label class="form-label">Numéro de téléphone</label>
+              <input class="form-input" id="op-phone" placeholder="07 00 00 00 00"/>
+              <div class="form-hint" id="op-phone-hint"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Montant (FCFA)</label>
+              <input class="form-input" id="op-amount" type="number" placeholder="5000" min="100"/>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg" onclick="prepareConfirm()">Continuer →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIQUE -->
+    <div class="page" id="tab-historique">
+      <div class="page-hd">
+        <div class="page-title">Historique</div>
+        <div class="page-sub">Toutes mes opérations</div>
+      </div>
+      <div class="filters">
+        <select class="filter-select" id="h-status" onchange="loadHistory()">
+          <option value="">Tous statuts</option>
+          <option value="SUCCESS">Succès</option>
+          <option value="PENDING">En attente</option>
+          <option value="PROCESSING">En cours</option>
+          <option value="FAILED">Échec</option>
+          <option value="TIMEOUT">Timeout</option>
+        </select>
+        <select class="filter-select" id="h-operator" onchange="loadHistory()">
+          <option value="">Tous opérateurs</option>
+          <option value="ORANGE">Orange</option>
+          <option value="MTN">MTN</option>
+          <option value="MOOV">Moov</option>
+          <option value="WAVE">Wave</option>
+        </select>
+        <select class="filter-select" id="h-type" onchange="loadHistory()">
+          <option value="">Dépôt & Retrait</option>
+          <option value="DEPOT">Dépôt</option>
+          <option value="RETRAIT">Retrait</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadHistory()">↻</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Référence</th><th>Type</th><th>Opérateur</th><th>Montant</th><th>Téléphone</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+          <tbody id="hist-body"></tbody>
+        </table>
+        <div class="pagination" id="hist-pag"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal confirmation -->
+<div class="overlay" id="modal-confirm">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">Confirmer l'opération</span><button class="modal-x" onclick="closeModal('modal-confirm')">✕</button></div>
+    <div class="modal-body">
+      <div class="confirm-amount">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px" id="confirm-type-label"></div>
+        <div class="confirm-amount-val" id="confirm-amount-val"></div>
+        <div id="confirm-op-badge"></div>
+      </div>
+      <div class="confirm-row"><span class="confirm-label">Opérateur</span><span id="confirm-op"></span></div>
+      <div class="confirm-row"><span class="confirm-label">Numéro</span><span id="confirm-phone" class="mono"></span></div>
+      <div class="confirm-row"><span class="confirm-label">Code USSD</span><span id="confirm-ussd" class="mono" style="font-size:12px;color:var(--text2)"></span></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Annuler</button>
+      <button class="btn btn-primary" id="btn-submit" onclick="submitOp()">Valider l'opération</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal résultat -->
+<div class="overlay" id="modal-result">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="result-title">Opération créée</span><button class="modal-x" onclick="closeModal('modal-result');loadMyStats();loadHistory()">✕</button></div>
+    <div class="modal-body">
+      <div class="success-screen">
+        <div class="success-icon">✓</div>
+        <div class="success-title">Opération envoyée!</div>
+        <div class="success-sub">Le téléphone Android va traiter l'opération et la confirmer automatiquement via SMS ou notification.</div>
+        <div class="success-ref" id="result-ref"></div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="card-hd" style="font-size:12px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:10px">Suivi du traitement</div>
+        <div id="result-steps">
+          <div class="op-step step-done"><div class="step-num">✓</div><div class="step-text">Opération créée</div></div>
+          <div class="op-step" id="step-processing"><div class="step-num">2</div><div class="step-text">En cours de traitement par l'appareil Android</div></div>
+          <div class="op-step" id="step-confirm"><div class="step-num">3</div><div class="step-text">Confirmation reçue (SMS / notification)</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal('modal-result');loadMyStats();loadHistory()">Fermer</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-result');showTab('nouvelle-op')">Nouvelle opération</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal détail historique -->
+<div class="overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title">Détail opération</span><button class="modal-x" onclick="closeModal('modal-detail')">✕</button></div>
+    <div class="modal-body" id="modal-detail-body"></div>
+    <div class="modal-ft"><button class="btn btn-primary" onclick="closeModal('modal-detail')">Fermer</button></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const API = window.API_URL || (()=>{const h=window.location.hostname;if(h==='localhost')return'http://localhost:3000';return window.location.origin.replace(/-user\b/,'-backend');})();
+let TOKEN=localStorage.getItem('yapson_user_token');
+let selectedType=null, selectedOperator=null, operators=[];
+let histPage=1, trackingInterval=null, ws=null;
+
+async function api(method,path,body){
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN}};
+  if(body)opts.body=JSON.stringify(body);
+  try{const r=await fetch(API+path,opts);if(r.status===401){doLogout();return null;}return r.json();}
+  catch(e){toast('Erreur réseau','err');return null;}
+}
+
+async function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  if(!u||!p)return showErr('Remplissez tous les champs');
+  try{
+    const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const d=await r.json();
+    if(!r.ok)return showErr(d.error||'Erreur de connexion');
+    TOKEN=d.token;
+    localStorage.setItem('yapson_user_token',TOKEN);
+    localStorage.setItem('yapson_user_data',JSON.stringify(d.user));
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-screen').style.display='block';
+    initApp(d.user);
+  }catch(e){showErr('Impossible de contacter le serveur');}
+}
+function showErr(m){const e=document.getElementById('login-err');e.textContent=m;e.style.display='block';}
+function doLogout(){TOKEN=null;localStorage.removeItem('yapson_user_token');if(ws)ws.close();location.reload();}
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function initApp(user){
+  document.getElementById('topbar-user').textContent=user.username;
+  document.getElementById('topbar-av').textContent=user.username[0].toUpperCase();
+  const h=new Date().getHours();
+  document.getElementById('dash-greeting').textContent=(h<12?'Bonjour ':'Bonsoir ')+user.username+' 👋';
+  loadMyStats();loadOperators();loadHistory();connectWS();
+}
+
+function connectWS(){
+  const url=API.replace('https://','wss://').replace('http://','ws://');
+  try{ws=new WebSocket(url);
+    ws.onopen=()=>{const user=JSON.parse(localStorage.getItem('yapson_user_data')||'{}');ws.send(JSON.stringify({type:'subscribe',room:'user:'+user.id}));};
+    ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='operation_update'){loadMyStats();refreshDashOps();}};
+    ws.onclose=()=>setTimeout(connectWS,4000);
+  }catch(e){}
+}
+
+function showTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelector('[data-tab="'+id+'"]').classList.add('active');
+  if(id==='historique')loadHistory();
+}
+
+async function loadMyStats(){
+  const d=await api('GET','/api/stats/my');if(!d)return;
+  document.getElementById('my-total').textContent=d.total.toLocaleString();
+  document.getElementById('my-success').textContent=d.success.toLocaleString();
+  document.getElementById('my-pending').textContent=d.pending.toLocaleString();
+  document.getElementById('my-today').textContent=d.today+' ops';
+  refreshDashOps();
+}
+
+async function refreshDashOps(){
+  const d=await api('GET','/api/operations?limit=5');if(!d)return;
+  const tb=document.getElementById('dash-ops');
+  if(!d.operations.length){tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-title">Aucune opération</div><div class="empty-sub">Créez votre première opération</div></div></td></tr>';return;}
+  tb.innerHTML=d.operations.map(op=>`
+    <tr class="clickable" onclick="openDetail('${op.id}')">
+      <td>${bType(op.type)}</td><td>${bOp(op.operator)}</td>
+      <td class="mono">${fmt(op.amount)}</td>
+      <td style="color:var(--text2)">${op.phoneNumber}</td>
+      <td>${bStat(op.status)}</td>
+      <td style="color:var(--text3);font-size:12px">${fmtD(op.createdAt)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDetail('${op.id}')">Voir</button></td>
+    </tr>`).join('');
+}
+
+async function loadOperators(){
+  const ops=await api('GET','/api/operators');if(!ops)return;
+  operators=ops.filter(o=>o.isActive);
+}
+
+function selectType(type){
+  selectedType=type;
+  document.getElementById('btn-depot').className='op-type-card'+(type==='DEPOT'?' selected-depot':'');
+  document.getElementById('btn-retrait').className='op-type-card'+(type==='RETRAIT'?' selected-retrait':'');
+  document.getElementById('step2').style.display='';
+  renderOperatorBtns();
+  selectedOperator=null;
+  document.getElementById('step3').style.display='none';
+}
+
+function renderOperatorBtns(){
+  document.getElementById('op-btns').innerHTML=operators.map(op=>`
+    <div class="operator-btn" id="opbtn-${op.operator}" onclick="selectOperator('${op.operator}')">
+      <div class="op-dot od-${op.operator.toLowerCase()}">${op.operator.substring(0,2)}</div>
+      <div>
+        <div style="font-size:13px;font-weight:600">${op.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${op.usesNotification?'Notif. app':'SMS'} · ${op.timeoutSeconds}s</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectOperator(op){
+  selectedOperator=op;
+  document.querySelectorAll('.operator-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('opbtn-'+op).classList.add('selected');
+  const cfg=operators.find(o=>o.operator===op);
+  if(cfg?.numberPrefixes){
+    document.getElementById('op-phone-hint').textContent='Préfixes: '+cfg.numberPrefixes;
+  }
+  document.getElementById('step3').style.display='';
+  document.getElementById('op-phone').focus();
+}
+
+function prepareConfirm(){
+  if(!selectedType||!selectedOperator){toast('Sélectionnez type et opérateur','err');return;}
+  const phone=document.getElementById('op-phone').value.trim();
+  const amount=parseFloat(document.getElementById('op-amount').value);
+  if(!phone){toast('Entrez un numéro de téléphone','err');return;}
+  if(!amount||amount<100){toast('Montant minimum: 100 FCFA','err');return;}
+  const cfg=operators.find(o=>o.operator===selectedOperator);
+  const ussdT=selectedType==='DEPOT'?cfg?.ussdDepot:cfg?.ussdRetrait;
+  const ussd=ussdT?ussdT.replace('{numero}',phone).replace('{montant}',amount).replace('{pin}',''):'—';
+  document.getElementById('confirm-type-label').textContent=selectedType==='DEPOT'?'DÉPÔT':'RETRAIT';
+  document.getElementById('confirm-amount-val').textContent=fmt(amount);
+  document.getElementById('confirm-op-badge').innerHTML=bOp(selectedOperator);
+  document.getElementById('confirm-op').textContent=cfg?.name||selectedOperator;
+  document.getElementById('confirm-phone').textContent=phone;
+  document.getElementById('confirm-ussd').textContent=ussd;
+  openModal('modal-confirm');
+}
+
+async function submitOp(){
+  document.getElementById('btn-submit').disabled=true;
+  document.getElementById('btn-submit').textContent='Envoi…';
+  const r=await api('POST','/api/operations',{
+    type:selectedType,operator:selectedOperator,
+    amount:parseFloat(document.getElementById('op-amount').value),
+    phoneNumber:document.getElementById('op-phone').value.trim()
+  });
+  document.getElementById('btn-submit').disabled=false;
+  document.getElementById('btn-submit').textContent='Valider l\'opération';
+  if(r?.id){
+    closeModal('modal-confirm');
+    document.getElementById('result-ref').textContent='Réf: '+r.reference;
+    openModal('modal-result');
+    startTracking(r.id);
+    document.getElementById('op-phone').value='';
+    document.getElementById('op-amount').value='';
+    selectedType=null;selectedOperator=null;
+    document.getElementById('btn-depot').className='op-type-card';
+    document.getElementById('btn-retrait').className='op-type-card';
+    document.getElementById('step2').style.display='none';
+    document.getElementById('step3').style.display='none';
+  }else toast(r?.error||'Erreur lors de la création','err');
+}
+
+function startTracking(opId){
+  if(trackingInterval)clearInterval(trackingInterval);
+  let attempts=0;
+  trackingInterval=setInterval(async()=>{
+    attempts++;if(attempts>24)return clearInterval(trackingInterval);
+    const op=await api('GET','/api/operations/'+opId);if(!op)return;
+    if(op.status==='PROCESSING'||op.status==='SUCCESS'||op.status==='FAILED'){
+      document.getElementById('step-processing').classList.add('step-done');
+      document.getElementById('step-processing').querySelector('.step-num').textContent='✓';
+    }
+    if(op.status==='SUCCESS'){
+      document.getElementById('step-confirm').classList.add('step-done');
+      document.getElementById('step-confirm').querySelector('.step-num').textContent='✓';
+      document.getElementById('step-confirm').querySelector('.step-text').textContent='Opération confirmée avec succès!';
+      clearInterval(trackingInterval);toast('Opération réussie!','ok');
+    }
+    if(op.status==='FAILED'||op.status==='TIMEOUT'){
+      document.getElementById('step-confirm').querySelector('.step-text').textContent='Échec: '+(op.notes||op.status);
+      document.getElementById('step-confirm').querySelector('.step-num').textContent='✗';
+      clearInterval(trackingInterval);toast('Opération échouée','err');
+    }
+  },5000);
+}
+
+async function loadHistory(){
+  const status=document.getElementById('h-status').value;
+  const operator=document.getElementById('h-operator').value;
+  const type=document.getElementById('h-type').value;
+  let url=`/api/operations?page=${histPage}&limit=20`;
+  if(status)url+='&status='+status;if(operator)url+='&operator='+operator;if(type)url+='&type='+type;
+  const d=await api('GET',url);if(!d)return;
+  const tb=document.getElementById('hist-body');
+  if(!d.operations.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-title">Aucune opération</div></div></td></tr>';return;}
+  tb.innerHTML=d.operations.map(op=>`
+    <tr class="clickable" onclick="openDetail('${op.id}')">
+      <td class="mono">${op.reference.substring(0,8)}…</td>
+      <td>${bType(op.type)}</td><td>${bOp(op.operator)}</td>
+      <td class="mono">${fmt(op.amount)}</td>
+      <td style="color:var(--text2)">${op.phoneNumber}</td>
+      <td>${bStat(op.status)}</td>
+      <td style="color:var(--text3);font-size:12px">${fmtD(op.createdAt)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDetail('${op.id}')">Voir</button></td>
+    </tr>`).join('');
+  const total=Math.ceil(d.total/d.limit)||1;
+  document.getElementById('hist-pag').innerHTML=`
+    <button onclick="gotoH(${histPage-1})" ${histPage<=1?'disabled':''}>←</button>
+    <span>Page ${histPage}/${total} — ${d.total} opérations</span>
+    <button onclick="gotoH(${histPage+1})" ${histPage>=total?'disabled':''}>→</button>`;
+}
+function gotoH(p){histPage=p;loadHistory();}
+
+async function openDetail(id){
+  const op=await api('GET','/api/operations/'+id);if(!op)return;
+  document.getElementById('modal-detail-body').innerHTML=`
+    <div class="op-status-detail">
+      ${bStat(op.status)}
+      <div style="font-family:var(--mono);font-size:24px;font-weight:700;margin:10px 0">${fmt(op.amount)}</div>
+      <div style="display:flex;gap:8px">${bType(op.type)} ${bOp(op.operator)}</div>
+    </div>
+    <div class="confirm-row"><span class="confirm-label">Référence</span><span class="mono" style="font-size:11px">${op.reference}</span></div>
+    <div class="confirm-row"><span class="confirm-label">Téléphone</span><span class="mono">${op.phoneNumber}</span></div>
+    <div class="confirm-row"><span class="confirm-label">Date</span><span>${fmtD(op.createdAt)}</span></div>
+    ${op.operatorTransactionId?`<div class="confirm-row"><span class="confirm-label">ID Opérateur</span><span class="mono">${op.operatorTransactionId}</span></div>`:''}
+    ${op.confirmationMessage?`<div style="margin-top:14px"><div class="form-label">Message de confirmation</div><div style="background:var(--bg3);padding:10px;border-radius:8px;font-size:12px;font-family:var(--mono);color:var(--text2)">${op.confirmationMessage}</div></div>`:''}
+    ${op.notes?`<div style="margin-top:10px"><div class="form-label">Notes</div><div style="font-size:12px;color:var(--text2)">${op.notes}</div></div>`:''}`;
+  openModal('modal-detail');
+}
+
+function fmt(n){return new Intl.NumberFormat('fr-FR').format(n)+' FCFA';}
+function fmtD(d){return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function bStat(s){const m={SUCCESS:'b-success Succès',FAILED:'b-failed Échec',PENDING:'b-pending En attente',PROCESSING:'b-processing En cours',TIMEOUT:'b-timeout Timeout'};const[c,l]=(m[s]||'b-pending ?').split(' ');return`<span class="badge ${c}">${l}</span>`;}
+function bOp(op){const m={ORANGE:'b-orange Orange',MTN:'b-mtn MTN',MOOV:'b-moov Moov',WAVE:'b-wave Wave'};const[c,l]=(m[op]||'b-processing '+op).split(' ');return`<span class="badge ${c}">${l}</span>`;}
+function bType(t){return t==='DEPOT'?'<span class="badge b-depot">Dépôt</span>':'<span class="badge b-retrait">Retrait</span>';}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function toast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast t-${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+
+if(TOKEN){const u=JSON.parse(localStorage.getItem('yapson_user_data')||'{}');if(u.id){document.getElementById('login-screen').classList.add('hidden');document.getElementById('app-screen').style.display='block';initApp(u);}}
+</script>
+</body>
+</html>
