@@ -1,1 +1,12 @@
-{"name":"yapson-user","version":"1.0.0","scripts":{"start":"npx serve . -p ${PORT:-3000} -s"},"dependencies":{"serve":"^14.2.1"}}
+{
+  "name": "yapson-user",
+  "version": "1.0.0",
+  "description": "Yapson Agent Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
